@@ -1,12 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
 from flask_migrate import Migrate    
 from sqlalchemy import Integer, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from models import TodoItem, Comment, db        
 
 app = Flask(__name__)
 CORS(app)
@@ -16,7 +14,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todos.db'
 class Base(DeclarativeBase):
   pass
 
-db = SQLAlchemy(app, model_class=Base)
+db.init_app(app)
 migrate = Migrate(app, db)    
 
 class TodoItem(db.Model):
@@ -58,17 +56,6 @@ todo_list = [
       "title": 'Build a Flask App',
       "done": False },
 ]
-
-INITIAL_TODOS = [
-    TodoItem(title='Learn Flask'),
-    TodoItem(title='Build a Flask App'),
-]
-
-with app.app_context():
-    if TodoItem.query.count() == 0:
-         for item in INITIAL_TODOS:
-             db.session.add(item)
-         db.session.commit()
 
 @app.route('/api/todos/', methods=['GET'])
 def get_todos():
