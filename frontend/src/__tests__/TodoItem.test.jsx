@@ -1,5 +1,7 @@
-import { render, screen } from '@testing-library/react'
-import { expect } from 'vitest'
+
+import { render, screen, fireEvent } from '@testing-library/react'
+import { expect, vi } from 'vitest'
+import userEvent from '@testing-library/user-event'
 import TodoItem from '../TodoItem.jsx'
 
 const baseTodo = {             
@@ -44,9 +46,39 @@ describe('TodoItem', () => {
     );
     
     expect(screen.getByText('Sample Todo')).toBeInTheDocument();
-    
     expect(screen.getByText('First comment')).toBeInTheDocument();
     expect(screen.getByText('Another comment')).toBeInTheDocument();
     expect(screen.getByText(/2/)).toBeInTheDocument();
+  }); 
+
+  it('makes callback to toggleDone when Toggle button is clicked', () => {
+    const onToggleDone = vi.fn();
+    render(
+      <TodoItem 
+       todo={baseTodo} 
+       toggleDone={onToggleDone} />
+    );
+    const button = screen.getByRole('button', { name: /toggle/i });
+    button.click();
+    expect(onToggleDone).toHaveBeenCalledWith(baseTodo.id);
+  });
+
+  it('makes callback to addNewComment when a new comment is added', async () => {
+    const onAddNewComment = vi.fn();
+    
+    render(
+      <TodoItem 
+        todo={baseTodo}
+        addNewComment={onAddNewComment} 
+      />
+    );
+
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'New comment');
+
+    const button = screen.getByRole('button', { name: /add comment/i });
+    fireEvent.click(button);
+
+    expect(onAddNewComment).toHaveBeenCalledWith(baseTodo.id, 'New comment');
   });
 });
